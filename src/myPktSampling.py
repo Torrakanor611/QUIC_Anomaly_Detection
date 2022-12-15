@@ -6,104 +6,36 @@ import pyshark
 import statistics
 import numpy as np
 
-def pktHandler(timestamp,srcIP,dstIP,lengthIP,sampDelta,outfile, protocol, srcPort, dstPort):
-    global scnets
+def pktHandler(timestamp,dstIP,lengthIP,outfile, np, verbose):
     global ssnets
-    global npkts
-    global T0
     global outc
-    global last_ks
-    # added our metrics
     global lastTimestamp
-    global auxPktLen # list of pkt Len
-    auxPktLen = []
     
-    if (IPAddress(srcIP) in scnets and IPAddress(dstIP) in ssnets) or (IPAddress(srcIP) in ssnets and IPAddress(dstIP) in scnets):
-        if npkts==0:
-            T0=float(timestamp)
-            last_ks=0
-            minPktLen = 10000 # high value
-            maxPktLen = -1 # low value
-
+    if IPAddress(dstIP) in ssnets:  # Download / cli -> serv
+        outc[0]=int(lengthIP)
+        outc[1]=float(timestamp) - lastTimestamp
+        lastTimestamp = float(timestamp)
             
-        ks=int((float(timestamp)-T0)/sampDelta)
-        # {number} {num.of pkt cli -> serv} {bytes upload} {num.of pkt serv-> cli} {bytes download} \
-        # {total num.of pkt in the flow} {max pkt len} {min pkt len} {average pkt len} {median pkt len} \
-        # {mode pkt len} {strd dev pkt len} {95th perc}
-        if ks>last_ks:
-            outfile.write('{} {} {} {} {} {} {} {} {} {} {} {} {}\n'.format(last_ks,*outc))
-            print('{} {} {} {} {} {} {} {} {} {} {} {} {}'.format(last_ks,*outc))
-            outc=[0,0,0,0,0,0,0,0,0,0,0,0,0]  
-            
-        if ks>last_ks+1:
-            for j in range(last_ks+1,ks):
-                outfile.write('{} {} {} {} {} {} {} {} {} {} {} {} {}\n'.format(j,*outc))
-                print('{} {} {} {} {} {} {} {} {} {} {} {} {}'.format(j,*outc))
+        outfile.write('{} {} {}\n'.format(np,*outc))
+        if verbose == str(1):
+            print('{} {} {}'.format(np,*outc))
 
-        # partir por clientes, depois gerar
         # o que tem mais o tamanho do pacote cli -> serv
-        # numero de pacotes
-        # tempo para o pacote anterior 
-        # toda a infromação para mais tar
+        # numero de bytes outc[0]
+        # tempo para o pacote anterior outc[1]
         # manter a variancia e a média
-
-
-        if IPAddress(dstIP) in scnets:  # Download / cli -> serv
-            outc[2]=outc[2]+1
-            outc[3]=outc[3]+int(lengthIP)
-
-            auxPktLen = auxPktLen + int(lengthIP)
-
-            if int(lengthIP) > maxPktLen:
-                maxPktLen = int(lengthIP)
-            
-            if int(lengthIP) < minPktLen:
-                minPktLen = int(lengthIP)
-
-            outc[7] = statistics.mean(auxPktLen)
-            strdDevPktLen = statistics.stdev(auxPktLen)
-
-
-        outc[5] = maxPktLen
-        outc[6] = minPktLen
-        outc[8] = medPktLen
-        outc[9] = modePktLen
-        outc[10] = strdDevPktLen
-        outc[11] = _95thPecPktLen
-
-        npkts=npkts+1
-        last_ks=ks
-
 
 def main():
     parser=argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbose', nargs='?', required=False, help='verbose output', default=0)
+    parser.add_argument('-np', '--number', nargs='?', required=True, help='number of packets to consider')
     parser.add_argument('-i', '--input', nargs='?',required=True, help='input file')
     parser.add_argument('-o', '--output', nargs='?',required=False, help='output file')
-    parser.add_argument('-f', '--format', nargs='?',required=True, help='format',default=1)
-    parser.add_argument('-d', '--delta', nargs='?',required=False, help='samplig delta interval')
-    parser.add_argument('-c', '--cnet', nargs='+',required=True, help='client network(s)')
     parser.add_argument('-s', '--snet', nargs='+',required=True, help='service network(s)')
+
+    # python3 myPktSampling.py -v 1 -np 200 -i ../data/3_dummy.pcapng -s 192.168.56.0/24
     
     args=parser.parse_args()
-    
-    if args.delta is None:
-        sampDelta=1
-    else:
-        sampDelta=float(args.delta)
-    
-    cnets=[]
-    for n in args.cnet:
-        try:
-            nn=IPNetwork(n)
-            cnets.append(nn)
-        except:
-            print('{} is not a network prefix'.format(n))
-    #print(cnets)
-    if len(cnets)==0:
-        print("No valid client network prefixes.")
-        sys.exit()
-    global scnets
-    scnets=IPSet(cnets)
 
     snets=[]
     for n in args.snet:
@@ -112,7 +44,6 @@ def main():
             snets.append(nn)
         except:
             print('{} is not a network prefix'.format(n))
-    #print(snets)
     if len(snets)==0:
         print("No valid service network prefixes.")
         sys.exit()
@@ -121,35 +52,38 @@ def main():
     ssnets=IPSet(snets)
         
     fileInput=args.input
-    fileFormat=int(args.format)
     
-    if args.output is None:
-        fileOutput=fileInput+"_d"+str(sampDelta)+".dat"
-    else:
-        fileOutput=args.output
-        
-    global npkts
-    global T0
+    fileOutput=fileInput+"_np-"+args.number+".dat" if args.output is None else args.ouput
+
     global outc
-    global last_ks
-    global auxPktLen # list of pkt Len
+    global lastTimestamp
 
     npkts=0
     outc=[0,0,0,0]
     #print('Sampling interval: {} second'.format(sampDelta))
 
-    outfile = open(fileOutput,'w') 
-    capture = pyshark.FileCapture(fileInput,display_filter='ip')
+    outfile = open(fileOutput,'w')
+    capture = []
+    try:
+        capture = pyshark.FileCapture(fileInput,display_filter='ip')
+    except FileNotFoundError as e:
+        print(e)
+        exit(2)
+
+    np = 0 # number of packets processed
+    lastTimestamp = float(capture[0].sniff_timestamp)
+
     for pkt in capture:
-        protocol =  pkt.transport_layer
         timestamp= pkt.sniff_timestamp
-        srcIP= pkt.ip.src
         dstIP= pkt.ip.dst
         lengthIP= pkt.ip.len
-        srcPort= protocol.srcport
-        dstPort=protocol.dstport
-        ## added src and dst udp port
-        pktHandler(timestamp,srcIP,dstIP,lengthIP,sampDelta,outfile, protocol, srcPort, dstPort)
+
+        # process 1st np packets
+        if np < int(args.number) + 1:
+            pktHandler(timestamp,dstIP,lengthIP,outfile, np, args.verbose)
+            np += 1
+        else:
+            break
     
     outfile.close()
 
