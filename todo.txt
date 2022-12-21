@@ -1,3 +1,10 @@
 usar o myPktSampling para ter o .pcap dividido por bocadinhos de tempo(sampling intervals). Serve para retirar Dados. O output dá um .txt
 usar o myObsWindows no .txt para ter os os dados divididos por janelas de oberservação. dá um diretório com .dat files
 usar o myExtractFeatures no diretório para tirar as features
+
+
+perguntas
+é preciso ter os udp ports/acho q n
+confirmar a fómula da variância
+
+media do tempo de pacotes abaixo de 1 seg e media do tempo de pacotes a cima de 1 seg no ficheiro Extract Features
