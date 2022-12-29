@@ -5,54 +5,59 @@ import numpy as np
    
 def extractStats(data):
     nSamp,nCols=data.shape
-    p=[75,90,95,98]
-    M1 = M2 = Md1 = Md2 = Std1 = Std2 = S1 = S2 = Pr1 = Pr2 = None
-    
-    indx1 = np.any(np.where(data[:,1] < 1))
-    indx2 = np.any(np.where(data[:,1] >= 1))
-    mystack = list()
-    if np.any(indx1):
-        dataL1 = data[indx1][0]
-        #print(dataL1)
-        M1=np.mean(dataL1,axis=0)
-        Md1=np.median(dataL1,axis=0)
-        Std1=np.std(dataL1,axis=0)
-        S1=stats.skew(dataL1)
-        #K1=stats.kurtosis(data)
-        Pr1=np.array(np.percentile(dataL1,p,axis=0)).T.flatten()
-        #print("< 1 features \n")
-        #print(M1)
-        mystack.append(M1)
-        mystack.append(Md1)
-        mystack.append(Std1)
-        #mystack.append(S1)
-        mystack.append(Pr1)        
-    
-    elif np.any(indx2):
-        dataG1 = data[indx2][0]
-        # print(dataG1)    
-        M2=np.mean(dataG1,axis=0)
-        Md2=np.median(dataG1,axis=0)
-        Std2=np.std(dataG1,axis=0)
-        S2=stats.skew(dataG1)
-        #K1=stats.kurtosis(data)
-        Pr2=np.array(np.percentile(dataG1,p,axis=0)).T.flatten()
-        # print("> 1 features \n")
-        # print(M2)
-        mystack.append(M2)
-        mystack.append(Md2)
-        mystack.append(Std2)
-        #mystack.append(S2)
-        mystack.append(Pr2)      
+    # print(data)
+    pkt_len, time = np.hsplit(data, 2)
+    # print(pkt_len)
+    # print(time)
+    times_m1seg = time[time < 1].flatten()
+    times_M1seg = time[time >= 1].flatten()
+    print(times_M1seg)
+    print(times_m1seg)
 
+    # (time independent) packet length features
+    mean_pl = np.mean(pkt_len)
+    median_pl = np.median(pkt_len)
+    StdDev_pl=np.std(pkt_len)
+    #Skew_pl=stats.skew(pkt_len)[0]
+    p=[95]
+    perc_pl=np.array(np.percentile(pkt_len,p)).T.flatten()[0]
     
-    ## All features
-    print("\n\nAll features")
-    features=np.hstack(mystack)
+    # print("mean_pl", mean_pl) 
+    # print("median_pl", median_pl)
+    # print("StdDev_pl", StdDev_pl)
+    # print("Skew_pl", Skew_pl)
+    # print("perc_pl", perc_pl)
+
+    mean_m1seg_t = median_m1seg_t = StdDev_m1seg_t = count_m1seg_t = 0
+    mean_M1seg_t = median_M1seg_t = StdDev_M1seg_t = count_M1seg_t = 0
+
+    # (time dependent) time for previous packet features
+    # < 1seg
+    if not times_m1seg.size == 0:
+        mean_m1seg_t = np.mean(times_m1seg)
+        median_m1seg_t = np.median(times_m1seg)
+        StdDev_m1seg_t = np.std(times_m1seg)
+        count_m1seg_t = len(times_m1seg)
+
+    # > 1seg
+    if not times_M1seg.size == 0:
+        mean_M1seg_t = np.mean(times_M1seg)
+        median_M1seg_t = np.median(times_M1seg)
+        StdDev_M1seg_t = np.std(times_M1seg)
+        count_M1seg_t = len(times_M1seg)
+
+    # print("mean_m1seg_t", mean_m1seg_t)
+    # print("median_m1seg_t", median_m1seg_t)
+    # print("StdDev_m1seg_t", StdDev_m1seg_t)
+    # print("mean_M1seg_t", mean_M1seg_t)
+    # print("Median_M1seg_t", median_M1seg_t)
+    # print("StdDev_M1seg_t", StdDev_M1seg_t)
+
+    features=np.hstack((mean_pl, median_pl, StdDev_pl, perc_pl, mean_m1seg_t, \
+        mean_M1seg_t, median_m1seg_t, median_M1seg_t, StdDev_m1seg_t, StdDev_M1seg_t, \
+        count_m1seg_t, count_M1seg_t))
     print(features)
-
-    ## TODO: contagem de pacotes c menos 1 sec pra anterior => periodo cada janela
-    ## TODO: perceber pq skew dá nan as vezes => buga os resultados
+    
     return(features)
 
 def extractFeatures(dirname,basename,nObs,allwidths):
