@@ -8,3 +8,7 @@ perguntas
 confirmar a fómula da variância
 
 media do tempo de pacotes abaixo de 1 seg e media do tempo de pacotes a cima de 1 seg no ficheiro Extract Features
+usar o myExtractFeatures no diretório para tirar as features
+
+Metrica: intervalo entre pacotes
+Janela temporal (primeiros 10 segundos) e calcular media e variancia de tamanhos de intervalos
