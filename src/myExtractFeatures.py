@@ -106,7 +106,7 @@ def main():
     else:
         outfilename=args.output
     
-    np.savetxt(outfilename,features,fmt='%d')
+    np.savetxt(outfilename,features,fmt='%1.3e')
     
     print(features.shape)
         
