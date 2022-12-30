@@ -177,11 +177,12 @@ def main():
     plt.ion()
     ## FEATURE EXTRACTION
     ## -- Load features from browsing and attack -- ##
-    features_browsing=np.loadtxt("Browsing_obs_features.dat")
+    features_browsing=np.loadtxt("QUIC_45minspcap_np-29385_obs_features.dat")
     oClass_browsing=np.ones((len(features_browsing),1))*0
 
-    features_dos=np.loadtxt("DoS_obs_features.dat")
-    oClass_dos=np.ones((len(features_dos),1))*0
+    features_dos = np.loadtxt("DoS_obs_features.dat")
+    features_dos1 = np.loadtxt("")
+    oClass_dos=np.ones((len(features_dos, features_dos1),1))*0
 
     features=np.vstack((features_browsing,features_dos))
     global oClass 
@@ -207,7 +208,7 @@ def main():
     testFeatures_dos=features_dos[pD:,:]
     testFeatures_browsing=features_browsing[pB:,:]
     testFeatures=np.vstack((testFeatures_browsing,testFeatures_dos))
-    testClass=np.vstack((oClass_browsing[pB:],oClass_dos[pD:]))
+    testClass=np.vstack((oClass_browsing[pB:],oClass_dos[pD:])) 
 
 
     ## FEATURE NORMALIZATION 
