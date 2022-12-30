@@ -204,7 +204,7 @@ def main():
     trainClass=np.vstack((oClass_browsing[:pB],))
 
     pD=int(len(features_dos)*percentage)        ## Test with mixed traffic (Browsing+DoS)
-    testFeatures_dos=features_browsing[pD:,:]
+    testFeatures_dos=features_dos[pD:,:]
     testFeatures_browsing=features_browsing[pB:,:]
     testFeatures=np.vstack((testFeatures_browsing,testFeatures_dos))
     testClass=np.vstack((oClass_browsing[pB:],oClass_dos[pD:]))
@@ -234,9 +234,9 @@ def main():
      # neg = equal as classified as 'ok'
      # training set -> browsing
      # test set -> DoS
-    testFeatures=np.vstack((testFeatures_dos))
-    testFeaturesN=trainScaler.transform(testFeatures)
-    trainFeaturesNPCA,testFeaturesNPCA = myPCA(trainFeaturesN, testFeaturesN, trainClass)
+    testFeatures_DoS=np.vstack((testFeatures_dos))
+    testFeaturesN_DoS=trainScaler.transform(testFeatures_DoS)
+    trainFeaturesNPCA_DoS,testFeaturesNPCA_DoS = myPCA(trainFeaturesN, testFeaturesN_DoS, trainClass)
 
     cd = [0, 0, 0 ,0]
     cdPCA = [0, 0, 0 ,0]
@@ -248,26 +248,26 @@ def main():
     svmPCAP = [0, 0, 0 ,0]
     _svmL = [0,0,0,0]
 
-    cd[0], cd[1] = CentroidsDistance(trainClass, trainFeaturesN, testFeaturesN)
-    cdPCA[0], cdPCA[1] = CentroidsDistance_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
-    MvPCA[0], MvPCA[1] = MultivariatePDF_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
+    cd[0], cd[1] = CentroidsDistance(trainClass, trainFeaturesN, testFeaturesN_DoS)
+    cdPCA[0], cdPCA[1] = CentroidsDistance_PCA(trainClass, trainFeaturesNPCA_DoS, testFeaturesNPCA_DoS)
+    MvPCA[0], MvPCA[1] = MultivariatePDF_PCA(trainClass, trainFeaturesNPCA_DoS, testFeaturesNPCA_DoS)
 
-    _svmL[0], _svmL[1], _svmRbf[0], _svmRbf[1], _svmP[0], _svmP[1] = OneClassSVM(trainFeaturesN, testFeaturesN)
-    svmPCAL[0], svmPCAL[1], svmPCARbf[0], svmPCARbf[1], svmPCAP[0], svmPCAP[1] = OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA)
+    _svmL[0], _svmL[1], _svmRbf[0], _svmRbf[1], _svmP[0], _svmP[1] = OneClassSVM(trainFeaturesN, testFeaturesN_DoS)
+    svmPCAL[0], svmPCAL[1], svmPCARbf[0], svmPCARbf[1], svmPCAP[0], svmPCAP[1] = OneClassSVM_PCA(trainFeaturesNPCA_DoS, testFeaturesNPCA_DoS)
 
      # training set -> browsing
      # test set -> browsing, but diferent from above training set
     testFeatures_browsing=features_browsing[pB:,:]
-    testFeatures=np.vstack((testFeatures_browsing))
-    testFeaturesN=trainScaler.transform(testFeatures)
-    trainFeaturesNPCA,testFeaturesNPCA = myPCA(trainFeaturesN, testFeaturesN, trainClass)
+    testFeatures_B=np.vstack((testFeatures_browsing))
+    testFeaturesN_B=trainScaler.transform(testFeatures_B)
+    trainFeaturesNPCA_B,testFeaturesNPCA_B = myPCA(trainFeaturesN, testFeaturesN_B, trainClass)
 
-    cd[2], cd[3] = CentroidsDistance(trainClass, trainFeaturesN, testFeaturesN)
-    cdPCA[2], cdPCA[3] = CentroidsDistance_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
-    MvPCA[2], MvPCA[3] = MultivariatePDF_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
+    cd[2], cd[3] = CentroidsDistance(trainClass, trainFeaturesN, testFeaturesN_B)
+    cdPCA[2], cdPCA[3] = CentroidsDistance_PCA(trainClass, trainFeaturesNPCA_B, testFeaturesNPCA_B)
+    MvPCA[2], MvPCA[3] = MultivariatePDF_PCA(trainClass, trainFeaturesNPCA_B, testFeaturesNPCA_B)
 
-    _svmL[2], _svmL[3], _svmRbf[2], _svmRbf[3], _svmP[2], _svmP[3] = OneClassSVM(trainFeaturesN, testFeaturesN)
-    svmPCAL[2], svmPCAL[3], svmPCARbf[2], svmPCARbf[3], svmPCAP[2], svmPCAP[3] = OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA)
+    _svmL[2], _svmL[3], _svmRbf[2], _svmRbf[3], _svmP[2], _svmP[3] = OneClassSVM(trainFeaturesN, testFeaturesN_B)
+    svmPCAL[2], svmPCAL[3], svmPCARbf[2], svmPCARbf[3], svmPCAP[2], svmPCAP[3] = OneClassSVM_PCA(trainFeaturesNPCA_B, testFeaturesNPCA_B)
 
     print(cd, cdPCA, MvPCA, _svmL, _svmRbf, _svmP, svmPCAL, svmPCARbf, svmPCAP)
 
@@ -276,6 +276,8 @@ def main():
     bar_labels = ['tp', 'fn', 'fp', 'tn']
 
     fig, axs = plt.subplots(3, 3)
+    custom_ylim = (0, 650)
+    plt.setp(axs, ylim=custom_ylim)
     axs[0, 0].bar(metrics, cd, label=bar_labels, color=bar_colors)
     axs[0, 0].set_title("Centroids Distances")
     axs[0, 1].bar(metrics, cdPCA, label=bar_labels, color=bar_colors)
