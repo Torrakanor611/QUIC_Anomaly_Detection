@@ -50,7 +50,7 @@ def main():
         
     fileInput=args.input
     
-    fileOutput=fileInput+"_np-"+args.number+".dat" if args.output is None else args.ouput
+    fileOutput=fileInput+"_np-"+args.number+".dat" if args.output is None else args.output
 
     global outc
     global lastTimestamp
