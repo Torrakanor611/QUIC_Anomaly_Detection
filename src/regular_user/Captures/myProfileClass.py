@@ -31,7 +31,7 @@ def plotFeatures(title,features,oClass,f1index=0,f2index=1):
     plt.xlabel("Mean (1st column)")
     plt.ylabel("Median (2nd column)")
     plt.show()
-    waitforEnter(True)
+    waitforEnter(False)
     
 
 def myPCA(trainFeaturesN,testFeaturesN, trainClass):
@@ -58,7 +58,7 @@ def CentroidsDistance(trainClass,trainFeaturesN,testFeaturesN):
     centroids.update({0:np.mean(trainFeaturesN[pClass,:],axis=0)})
     print('All Features Centroids:\n',centroids)
 
-
+    pos = neg = 0
     AnomalyThreshold=1.2
     print('\n-- Anomaly Detection based on Centroids Distances --')
     nObsTest,nFea=testFeaturesN.shape
@@ -67,11 +67,13 @@ def CentroidsDistance(trainClass,trainFeaturesN,testFeaturesN):
         dist=distance(x,centroids[0])
         if dist >AnomalyThreshold:
             result="Anomaly"
+            pos = pos + 1
         else:
             result="OK"
+            neg = neg + 1
 
         print('Obs: {:2} ({}): Normalized Distance to Centroids: {:.4f}   -> Result -> {}'.format(i,Classes[oClass[i][0]],dist,result))
-
+    return (pos, neg)
 
 def CentroidsDistance_PCA(trainClass,trainFeaturesNPCA,testFeaturesNPCA):
     centroids={}
@@ -79,6 +81,7 @@ def CentroidsDistance_PCA(trainClass,trainFeaturesNPCA,testFeaturesNPCA):
     centroids.update({0:np.mean(trainFeaturesNPCA[pClass,:],axis=0)})
     print('All Features Centroids:\n',centroids)
 
+    pos = neg = 0
     AnomalyThreshold=1.2
     print('\n-- Anomaly Detection based on Centroids Distances (PCA Features) --')
     nObsTest,nFea=testFeaturesNPCA.shape
@@ -87,11 +90,13 @@ def CentroidsDistance_PCA(trainClass,trainFeaturesNPCA,testFeaturesNPCA):
         dist=distance(x,centroids[0])
         if dist > AnomalyThreshold:
             result="Anomaly"
+            pos = pos + 1
         else:
             result="OK"
+            neg = neg + 1
         
         print('Obs: {:2} ({}): Normalized Distance to Centroids (PCA): {:.4f} -> Result -> {}'.format(i,Classes[oClass[i][0]],dist,result))
-
+    return (pos, neg)
 
 def MultivariatePDF_PCA(trainClass, trainFeaturesNPCA,testFeaturesNPCA):
     print('\n-- Anomaly Detection based Multivariate PDF (PCA Features) --')
@@ -104,6 +109,7 @@ def MultivariatePDF_PCA(trainClass, trainFeaturesNPCA,testFeaturesNPCA):
     covs.update({0:np.cov(trainFeaturesNPCA[pClass,:],rowvar=0)})
     print(covs)
 
+    pos = neg = 0
     AnomalyThreshold=0.05
     nObsTest,nFea=testFeaturesNPCA.shape
     for i in range(nObsTest):
@@ -111,11 +117,13 @@ def MultivariatePDF_PCA(trainClass, trainFeaturesNPCA,testFeaturesNPCA):
         prob = multivariate_normal.pdf(x,means[0],covs[0])
         if prob < AnomalyThreshold:
             result="Anomaly"
+            pos = pos + 1
         else:
             result="OK"
+            neg = neg + 1
         
         print('Obs: {:2} ({}): Probabilities: {:.4e} -> Result -> {}'.format(i,Classes[oClass[i][0]],prob,result))
-
+    return (pos, neg)
 
 def OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA):
     print('\n-- Anomaly Detection based on One Class Support Vector Machines (PCA Features) --')
@@ -129,10 +137,17 @@ def OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA):
 
     AnomResults={-1:"Anomaly",1:"OK"}
 
+    linpos = linneg = RBFpos = RBFneg = polypos = polyneg = 0
     nObsTest,nFea=testFeaturesNPCA.shape
     for i in range(nObsTest):
+        linpos = linpos + 1 if L1[i] == -1 else linpos
+        linneg = linneg + 1 if L1[i] == 1 else linneg
+        RBFpos = RBFpos + 1 if L2[i] == -1 else RBFpos
+        RBFneg = RBFneg + 1 if L2[i] == 1 else RBFneg
+        polypos = polypos + 1 if L3[i] == -1 else polypos
+        polyneg = polyneg + 1 if L3[i] == 1 else polyneg
         print('Obs: {:2} ({:<8}): Kernel Linear->{:<10} | Kernel RBF->{:<10} | Kernel Poly->{:<10}'.format(i,Classes[oClass[i][0]],AnomResults[L1[i]],AnomResults[L2[i]],AnomResults[L3[i]]))
-
+    return (linpos, linneg, RBFpos, RBFneg, polypos, polyneg)
 
 def OneClassSVM(trainFeaturesN, testFeaturesN):
     print('\n-- Anomaly Detection based on One Class Support Vector Machines --')
@@ -146,9 +161,17 @@ def OneClassSVM(trainFeaturesN, testFeaturesN):
 
     AnomResults={-1:"Anomaly",1:"OK"}
 
+    linpos = linneg = RBFpos = RBFneg = polypos = polyneg = 0
     nObsTest,nFea=testFeaturesN.shape
     for i in range(nObsTest):
+        linpos = linpos + 1 if L1[i] == -1 else linpos
+        linneg = linneg + 1 if L1[i] == 1 else linneg
+        RBFpos = RBFpos + 1 if L2[i] == -1 else RBFpos
+        RBFneg = RBFneg + 1 if L2[i] == 1 else RBFneg
+        polypos = polypos + 1 if L3[i] == -1 else polypos
+        polyneg = polyneg + 1 if L3[i] == 1 else polyneg
         print('Obs: {:2} ({:<8}): Kernel Linear->{:<10} | Kernel RBF->{:<10} | Kernel Poly->{:<10}'.format(i,Classes[oClass[i][0]],AnomResults[L1[i]],AnomResults[L2[i]],AnomResults[L3[i]]))
+    return (linpos, linneg, RBFpos, RBFneg, polypos, polyneg)
 
 def main():
     plt.ion()
@@ -202,11 +225,80 @@ def main():
     CentroidsDistance_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
     MultivariatePDF_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
 
-
     ## ANOMALY DETECTION Machine Learning
     OneClassSVM(trainFeaturesN, testFeaturesN)
     OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA)
 
+    ## Evaluation of Anomaly Detection Results
+     # pos = equal as classified as 'anomaly'
+     # neg = equal as classified as 'ok'
+     # training set -> browsing
+     # test set -> DoS
+    testFeatures=np.vstack((testFeatures_dos))
+    testFeaturesN=trainScaler.transform(testFeatures)
+    trainFeaturesNPCA,testFeaturesNPCA = myPCA(trainFeaturesN, testFeaturesN, trainClass)
+
+    cd = [0, 0, 0 ,0]
+    cdPCA = [0, 0, 0 ,0]
+    MvPCA =[0, 0, 0 ,0]
+    _svmRbf =[0, 0, 0 ,0]
+    _svmP = [0, 0, 0 ,0]
+    svmPCAL =[0, 0, 0 ,0]
+    svmPCARbf =[0, 0, 0 ,0]
+    svmPCAP = [0, 0, 0 ,0]
+    _svmL = [0,0,0,0]
+
+    cd[0], cd[1] = CentroidsDistance(trainClass, trainFeaturesN, testFeaturesN)
+    cdPCA[0], cdPCA[1] = CentroidsDistance_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
+    MvPCA[0], MvPCA[1] = MultivariatePDF_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
+
+    _svmL[0], _svmL[1], _svmRbf[0], _svmRbf[1], _svmP[0], _svmP[1] = OneClassSVM(trainFeaturesN, testFeaturesN)
+    svmPCAL[0], svmPCAL[1], svmPCARbf[0], svmPCARbf[1], svmPCAP[0], svmPCAP[1] = OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA)
+
+     # training set -> browsing
+     # test set -> browsing, but diferent from above training set
+    testFeatures_browsing=features_browsing[pB:,:]
+    testFeatures=np.vstack((testFeatures_browsing))
+    testFeaturesN=trainScaler.transform(testFeatures)
+    trainFeaturesNPCA,testFeaturesNPCA = myPCA(trainFeaturesN, testFeaturesN, trainClass)
+
+    cd[2], cd[3] = CentroidsDistance(trainClass, trainFeaturesN, testFeaturesN)
+    cdPCA[2], cdPCA[3] = CentroidsDistance_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
+    MvPCA[2], MvPCA[3] = MultivariatePDF_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
+
+    _svmL[2], _svmL[3], _svmRbf[2], _svmRbf[3], _svmP[2], _svmP[3] = OneClassSVM(trainFeaturesN, testFeaturesN)
+    svmPCAL[2], svmPCAL[3], svmPCARbf[2], svmPCARbf[3], svmPCAP[2], svmPCAP[3] = OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA)
+
+    print(cd, cdPCA, MvPCA, _svmL, _svmRbf, _svmP, svmPCAL, svmPCARbf, svmPCAP)
+
+    metrics = ['True pos.', 'False neg.', 'False pos.', 'True neg.']
+    bar_colors = ['tab:green', 'tab:red', 'tab:blue', 'tab:blue']
+    bar_labels = ['tp', 'fn', 'fp', 'tn']
+
+    fig, axs = plt.subplots(3, 3)
+    axs[0, 0].bar(metrics, cd, label=bar_labels, color=bar_colors)
+    axs[0, 0].set_title("Centroids Distances")
+    axs[0, 1].bar(metrics, cdPCA, label=bar_labels, color=bar_colors)
+    axs[0, 1].set_title("Centroids Distances (PCA)")
+    axs[0, 2].bar(metrics, MvPCA, label=bar_labels, color=bar_colors)
+    axs[0, 2].set_title("Multivariate PDF (PCA)")
+
+    axs[1, 0].bar(metrics, _svmL, label=bar_labels, color=bar_colors)
+    axs[1, 0].set_title("One Class SVM Linear")
+    axs[1, 1].bar(metrics, _svmRbf, label=bar_labels, color=bar_colors)
+    axs[1, 1].set_title("One Class SVM RBF")
+    axs[1, 2].bar(metrics, _svmP, label=bar_labels, color=bar_colors)
+    axs[1, 2].set_title("One Class SVM poly")
+
+    axs[2, 0].bar(metrics, svmPCAL, label=bar_labels, color=bar_colors)
+    axs[2, 0].set_title("One Class SVM Linear (PCA)")
+    axs[2, 1].bar(metrics, svmPCARbf, label=bar_labels, color=bar_colors)
+    axs[2, 1].set_title("One Class SVM RBF (PCA)")
+    axs[2, 2].bar(metrics, svmPCAP, label=bar_labels, color=bar_colors)
+    axs[2, 2].set_title("One Class SVM poly (PCA)")
+    fig.tight_layout()
+    plt.show()
+    waitforEnter(True)
 
 if __name__ == '__main__':
     main()

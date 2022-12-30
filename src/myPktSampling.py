@@ -29,8 +29,10 @@ def main():
     parser.add_argument('-o', '--output', nargs='?',required=False, help='output file')
     parser.add_argument('-s', '--snet', nargs='+',required=True, help='service network(s)')
 
-    # python3 myPktSampling.py -np 200 -i ../data/3_dummy.pcapng -s 192.168.56.0/30
-    # python3 myPktSampling.py -np 29385 -i regular_user/Captures/QUIC_45mins.pcap -s 192.168.56.0/30
+    # python3 myPktSampling.py -v 1 -np 500 -i ../data/3_dummy.pcapng -s 192.168.56.100/30 -o ./attacks/3_dummy-np-500.dat
+    # python3 myPktSampling.py -v 1 -np 400 -i ../data/3_dummy1.pcapng -s 192.168.56.100/30 -o ./attacks/3_dummy1-np-400.dat
+    # python3 myPktSampling.py -v 1 -np 1500 -i ../data/3_smarter.pcapng -s 192.168.56.100/30 -o ./attacks/3_smarter-np-1500.dat
+
 
     args=parser.parse_args()
 
