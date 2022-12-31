@@ -19,7 +19,7 @@ def extractStats(data):
     median_pl = np.median(pkt_len)
     StdDev_pl=np.std(pkt_len)
     #Skew_pl=stats.skew(pkt_len)[0]
-    p=[95]
+    p=[75,90,95,98]
     perc_pl=np.array(np.percentile(pkt_len,p)).T.flatten()[0]
     
     # print("mean_pl", mean_pl) 

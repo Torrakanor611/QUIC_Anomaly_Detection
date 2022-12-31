@@ -32,7 +32,21 @@ def plotFeatures(title,features,oClass,f1index=0,f2index=1):
     plt.ylabel("Median (2nd column)")
     plt.show()
     waitforEnter(False)
-    
+     
+def outputStatistics(method,tp, fp,tn,fn):
+    ac = ((tp+tn)/(tp+tn+fp+fn))*100
+    pr = (tp/(tp+fp))*100
+    rec = (tp/(tp+fn))*100
+    sc = (2*(rec*pr))/(rec+pr)
+
+    print(" ----------- Output from "+method+" ----------- ")
+    print("True Positives: {}, False Positives: {}".format(tp,fp))
+    print("True Positives: {}, False Positives: {}".format(tp,fp))
+    print("Accuracy (%): " + str(ac))
+    print("Precision (%): ", str(pr))
+    print("Recall (%): ", str(rec))
+    print("F1-Score: ", str(sc))
+    print(" ---------------------------------------------- \n")
 
 def myPCA(trainFeaturesN,testFeaturesN, trainClass):
     pca = PCA(n_components=3, svd_solver='full')
@@ -68,6 +82,7 @@ def CentroidsDistance(trainClass,trainFeaturesN,testFeaturesN):
         if dist >AnomalyThreshold:
             result="Anomaly"
             pos = pos + 1
+            totA += 1
         else:
             result="OK"
             neg = neg + 1
@@ -234,13 +249,28 @@ def main():
 
 
     ## ANOMALY DETECTION Statistics
-    CentroidsDistance(trainClass, trainFeaturesN, testFeaturesN)
-    CentroidsDistance_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
-    MultivariatePDF_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
+    AnomaliesCD ,_ = CentroidsDistance(trainClass, trainFeaturesN, testFeaturesN)
+    AnomaliesCD_PCA ,_ = CentroidsDistance_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
+    AnomaliesMlt ,_ = MultivariatePDF_PCA(trainClass, trainFeaturesNPCA, testFeaturesNPCA)
 
     ## ANOMALY DETECTION Machine Learning
-    OneClassSVM(trainFeaturesN, testFeaturesN)
-    OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA)
+    AnomaliesL, _, AnomaliesRBF, _, AnomaliesP, _ = OneClassSVM(trainFeaturesN, testFeaturesN)
+    AnomaliesL_PCA, _, AnomaliesRBF_PCA, _, AnomaliesP_PCA, _ = (trainFeaturesNPCA, testFeaturesNPCA)
+
+    ## TODO: check 
+    # Anomaly Counter
+    print("----------- Total of Anomalies for each method -----------")
+    print("Centroids Distance: "+str(AnomaliesCD))
+    print("Centroids Distance PCA: "+str(AnomaliesCD_PCA))
+    print("Multivariate PCA: "+str(AnomaliesMlt))
+    print("SVM Linear: "+str(AnomaliesL))
+    print("SVM Linear PCA: "+str(AnomaliesL_PCA))
+    print("SVM RBF: "+str(AnomaliesRBF))
+    print("SVM RBF PCA: "+str(AnomaliesRBF_PCA))
+    print("SVM Poly: "+str(AnomaliesP))
+    print("SVM Poly PCA: "+str(AnomaliesP_PCA))
+    print("----------------------------------------------------------\n")
+
 
     ## Evaluation of Anomaly Detection Results
      # pos = equal as classified as 'anomaly'
@@ -252,6 +282,7 @@ def main():
     testFeaturesN_DoS=trainScaler.transform(testFeatures_DoS)
     trainFeaturesNPCA_DoS,testFeaturesNPCA_DoS = myPCA(trainFeaturesN, testFeaturesN_DoS, trainClass)
 
+    #[tp, fp,tn,fn]
     cd = [0, 0, 0 ,0]
     cdPCA = [0, 0, 0 ,0]
     MvPCA =[0, 0, 0 ,0]
@@ -285,10 +316,22 @@ def main():
 
     print(cd, cdPCA, MvPCA, _svmL, _svmRbf, _svmP, svmPCAL, svmPCARbf, svmPCAP)
 
+    ## TODO: check
+    ## Output Accuracy and Precision Stats
+    outputStatistics("CentroidDistance",cd[0],cd[1],cd[2],cd[3])
+    outputStatistics("CentroidDistance PCA",cdPCA[0],cdPCA[1],cdPCA[2],cdPCA[3])
+    outputStatistics("MultivariatePDF PCA",MvPCA[0],MvPCA[1],MvPCA[2],MvPCA[3])
+    outputStatistics("SVM Linear",_svmL[0],_svmL[1],_svmL[2],_svmL[3])  
+    outputStatistics("SVM RBF",_svmRbf[0],_svmRbf[1],_svmRbf[2],_svmRbf[3])    
+    outputStatistics("SVM Poly",_svmP[0],_svmP[1],_svmP[2],_svmP[3])
+    outputStatistics("SVM Linear PCA",svmPCAL[0],svmPCAL[1],svmPCAL[2],svmPCAL[3])
+    outputStatistics("SVM RBF PCA",svmPCARbf[0],svmPCARbf[1],svmPCARbf[2],svmPCARbf[3])
+    outputStatistics("SVM Poly PCA",svmPCAP[0],svmPCAP[1],svmPCAP[2],svmPCAP[3])
+
     nObs, nFea = trainFeaturesN.shape
     print("trainFeaturesN nObs", nObs)
     
-    testFeaturesN_DoS
+    testFeaturesN_DoS       #TODO: Q É ISTO???
     nObs_DoS, nFea = testFeaturesN_DoS.shape
     print("testFeaturesN_DoS nObs", nObs_DoS)
 
