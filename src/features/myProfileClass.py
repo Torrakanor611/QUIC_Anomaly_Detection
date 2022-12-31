@@ -261,20 +261,6 @@ def main():
     AnomaliesL, _, AnomaliesRBF, _, AnomaliesP, _ = OneClassSVM(trainFeaturesN, testFeaturesN)
     AnomaliesL_PCA, _, AnomaliesRBF_PCA, _, AnomaliesP_PCA, _ = OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA)
 
-    ## TODO: check 
-    # Anomaly Counter
-    print("----------- Total of Anomalies for each method -----------")
-    print("Centroids Distance: "+str(AnomaliesCD))
-    print("Centroids Distance PCA: "+str(AnomaliesCD_PCA))
-    print("Multivariate PCA: "+str(AnomaliesMlt))
-    print("SVM Linear: "+str(AnomaliesL))
-    print("SVM Linear PCA: "+str(AnomaliesL_PCA))
-    print("SVM RBF: "+str(AnomaliesRBF))
-    print("SVM RBF PCA: "+str(AnomaliesRBF_PCA))
-    print("SVM Poly: "+str(AnomaliesP))
-    print("SVM Poly PCA: "+str(AnomaliesP_PCA))
-    print("----------------------------------------------------------\n")
-
 
     ## Evaluation of Anomaly Detection Results
      # pos = equal as classified as 'anomaly'
@@ -319,6 +305,20 @@ def main():
     svmPCAL[2], svmPCAL[3], svmPCARbf[2], svmPCARbf[3], svmPCAP[2], svmPCAP[3] = OneClassSVM_PCA(trainFeaturesNPCA_B, testFeaturesNPCA_B)
 
     print(cd, cdPCA, MvPCA, _svmL, _svmRbf, _svmP, svmPCAL, svmPCARbf, svmPCAP)
+
+    ## TODO: check 
+    # Anomaly Counter
+    print("----------- Total of Anomalies for each method -----------")
+    print("Centroids Distance: "+str(AnomaliesCD))
+    print("Centroids Distance PCA: "+str(AnomaliesCD_PCA))
+    print("Multivariate PCA: "+str(AnomaliesMlt))
+    print("SVM Linear: "+str(AnomaliesL))
+    print("SVM Linear PCA: "+str(AnomaliesL_PCA))
+    print("SVM RBF: "+str(AnomaliesRBF))
+    print("SVM RBF PCA: "+str(AnomaliesRBF_PCA))
+    print("SVM Poly: "+str(AnomaliesP))
+    print("SVM Poly PCA: "+str(AnomaliesP_PCA))
+    print("----------------------------------------------------------\n")
 
     ## TODO: check
     ## Output Accuracy and Precision Stats
