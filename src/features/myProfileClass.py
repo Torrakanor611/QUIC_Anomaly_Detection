@@ -33,15 +33,19 @@ def plotFeatures(title,features,oClass,f1index=0,f2index=1):
     plt.show()
     waitforEnter(False)
      
-def outputStatistics(method,tp, fp,tn,fn):
+def outputStatistics(method, tp, fp, tn, fn):
     ac = ((tp+tn)/(tp+tn+fp+fn))*100
     pr = (tp/(tp+fp))*100
     rec = (tp/(tp+fn))*100
-    sc = (2*(rec*pr))/(rec+pr)
+    sc = 0
+    if (rec+pr) == 0:
+        sc = 0
+    else:
+        sc = (2*(rec*pr))/(rec+pr)
 
     print(" ----------- Output from "+method+" ----------- ")
-    print("True Positives: {}, False Positives: {}".format(tp,fp))
-    print("True Positives: {}, False Positives: {}".format(tp,fp))
+    print("True Positives: {}, False Positives: {}".format(tp, fp))
+    print("True Negatives: {}, False Negatives: {}".format(tn, fn))
     print("Accuracy (%): " + str(ac))
     print("Precision (%): ", str(pr))
     print("Recall (%): ", str(rec))
@@ -82,7 +86,7 @@ def CentroidsDistance(trainClass,trainFeaturesN,testFeaturesN):
         if dist >AnomalyThreshold:
             result="Anomaly"
             pos = pos + 1
-            totA += 1
+            # totA += 1
         else:
             result="OK"
             neg = neg + 1
@@ -255,7 +259,7 @@ def main():
 
     ## ANOMALY DETECTION Machine Learning
     AnomaliesL, _, AnomaliesRBF, _, AnomaliesP, _ = OneClassSVM(trainFeaturesN, testFeaturesN)
-    AnomaliesL_PCA, _, AnomaliesRBF_PCA, _, AnomaliesP_PCA, _ = (trainFeaturesNPCA, testFeaturesNPCA)
+    AnomaliesL_PCA, _, AnomaliesRBF_PCA, _, AnomaliesP_PCA, _ = OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA)
 
     ## TODO: check 
     # Anomaly Counter
