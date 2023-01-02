@@ -53,7 +53,7 @@ def outputStatistics(method, tp, fp, tn, fn):
     print(" ---------------------------------------------- \n")
 
 def myPCA(trainFeaturesN,testFeaturesN, trainClass):
-    pca = PCA(n_components=3, svd_solver='full')
+    pca = PCA(n_components=5, svd_solver='full')
 
     trainPCA=pca.fit(trainFeaturesN)
     trainFeaturesNPCA = trainPCA.transform(trainFeaturesN)
@@ -70,14 +70,15 @@ def distance(c,p):
     return(np.sqrt(np.sum(np.square(p-c))))
 
 
-def CentroidsDistance(trainClass,trainFeaturesN,testFeaturesN): 
+def CentroidsDistance(trainClass, trainFeaturesN,testFeaturesN): 
     centroids={}
     pClass=(trainClass==0).flatten()
     centroids.update({0:np.mean(trainFeaturesN[pClass,:],axis=0)})
     print('All Features Centroids:\n',centroids)
-
+    #print("centroids", centroids)
+    #exit(1)
     pos = neg = 0
-    AnomalyThreshold=1.2
+    AnomalyThreshold=1.4
     print('\n-- Anomaly Detection based on Centroids Distances --')
     nObsTest,nFea=testFeaturesN.shape
     for i in range(nObsTest):
@@ -101,7 +102,7 @@ def CentroidsDistance_PCA(trainClass,trainFeaturesNPCA,testFeaturesNPCA):
     print('All Features Centroids:\n',centroids)
 
     pos = neg = 0
-    AnomalyThreshold=1.2
+    AnomalyThreshold=1.4
     print('\n-- Anomaly Detection based on Centroids Distances (PCA Features) --')
     nObsTest,nFea=testFeaturesNPCA.shape
     for i in range(nObsTest):
@@ -129,7 +130,7 @@ def MultivariatePDF_PCA(trainClass, trainFeaturesNPCA,testFeaturesNPCA):
     print(covs)
 
     pos = neg = 0
-    AnomalyThreshold=0.05
+    AnomalyThreshold=0.10
     nObsTest,nFea=testFeaturesNPCA.shape
     for i in range(nObsTest):
         x=testFeaturesNPCA[i,:]
@@ -234,11 +235,18 @@ def main():
     trainFeatures=np.vstack((trainFeatures_browsing))
     trainClass=np.vstack((oClass_browsing[:pB],))
 
-    percentage=0.50
     pD=int(len(features_dos)*percentage)        ## Test with mixed traffic (Browsing+DoS)
     testFeatures_dos=features_dos[pD:,:]
+    # Num. of entrys from dos dataset
+    nObs_dos, _ = testFeatures_dos.shape
+
     testFeatures_browsing=features_browsing[pB:,:]
+    # Num. of entrys from browsing dataset
+    nObs_b, _ = testFeatures_browsing.shape
     testFeatures=np.vstack((testFeatures_browsing,testFeatures_dos))
+
+    # N. observations of testFeatures dataset
+    nObs, _ = testFeatures.shape
     testClass=np.vstack((oClass_browsing[pB:],oClass_dos[pD:])) 
 
 
@@ -260,7 +268,6 @@ def main():
     ## ANOMALY DETECTION Machine Learning
     AnomaliesL, _, AnomaliesRBF, _, AnomaliesP, _ = OneClassSVM(trainFeaturesN, testFeaturesN)
     AnomaliesL_PCA, _, AnomaliesRBF_PCA, _, AnomaliesP_PCA, _ = OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA)
-
 
     ## Evaluation of Anomaly Detection Results
      # pos = equal as classified as 'anomaly'
@@ -309,15 +316,23 @@ def main():
     ## TODO: check 
     # Anomaly Counter
     print("----------- Total of Anomalies for each method -----------")
-    print("Centroids Distance: "+str(AnomaliesCD))
-    print("Centroids Distance PCA: "+str(AnomaliesCD_PCA))
-    print("Multivariate PCA: "+str(AnomaliesMlt))
-    print("SVM Linear: "+str(AnomaliesL))
-    print("SVM Linear PCA: "+str(AnomaliesL_PCA))
-    print("SVM RBF: "+str(AnomaliesRBF))
-    print("SVM RBF PCA: "+str(AnomaliesRBF_PCA))
-    print("SVM Poly: "+str(AnomaliesP))
-    print("SVM Poly PCA: "+str(AnomaliesP_PCA))
+    print("{:<31}{:>5}".format("Num. Observações test dataset: ", nObs))
+    print("{:<31}{:>5}".format("Num. entrys from browsing: ", nObs_b))
+    print("{:<31}{:>5}".format("Num. entrys from DoS: ", nObs_dos))
+    r = round((float(nObs_dos)/nObs)*100, 1)
+    print("{:<31}{:>5}".format("Percentage of DoS entrys: ", r))
+    print("{:<31}{:>5}".format("Expected anomalys: ", round(r/100*nObs, 1)))
+    print("\n")
+    print("{:<31}{:>5}".format("Centroids Distance: ", str(AnomaliesCD)))
+    print("{:<31}{:>5}".format("Centroids Distance PCA: ", str(AnomaliesCD_PCA)))
+    print("{:<31}{:>5}".format("Multivariate PCA: ", str(AnomaliesMlt)))
+    print("{:<31}{:>5}".format("SVM Linear: ", str(AnomaliesL)))
+    print("{:<31}{:>5}".format("SVM Linear PCA: ", str(AnomaliesL_PCA)))
+    print("{:<31}{:>5}".format("SVM RBF: ", str(AnomaliesRBF)))
+    print("{:<31}{:>5}".format("SVM RBF PCA: ", str(AnomaliesRBF_PCA)))
+    print("{:<31}{:>5}".format("SVM Poly: ", str(AnomaliesP)))
+    print("{:<31}{:>5}".format("SVM Poly PCA: ", str(AnomaliesP_PCA)))
+
     print("----------------------------------------------------------\n")
 
     ## TODO: check
@@ -335,14 +350,14 @@ def main():
     nObs, nFea = trainFeaturesN.shape
     print("trainFeaturesN nObs", nObs)
     
-    testFeaturesN_DoS       #TODO: Q É ISTO???
-    nObs_DoS, nFea = testFeaturesN_DoS.shape
-    print("testFeaturesN_DoS nObs", nObs_DoS)
+    # testFeaturesN_DoS       #TODO: Q É ISTO???
+    # nObs_DoS, nFea = testFeaturesN_DoS.shape
+    # print("testFeaturesN_DoS nObs", nObs_DoS)
 
-    nObs, nFea = testFeaturesN_B.shape
-    print("testFeaturesN_B nObs", nObs)
+    # nObs, nFea = testFeaturesN_B.shape
+    # print("testFeaturesN_B nObs", nObs)
 
-    print("trainFeaturesN nObs / testFeaturesN_DoS nObs", round(float(nObs_DoS / nObs)*100))
+    # print("trainFeaturesN nObs / testFeaturesN_DoS nObs", round(float(nObs_DoS / nObs)*100))
 
     metrics = ['True pos.', 'False neg.', 'False pos.', 'True neg.']
     bar_colors = ['tab:green', 'tab:red', 'tab:blue', 'tab:blue']
