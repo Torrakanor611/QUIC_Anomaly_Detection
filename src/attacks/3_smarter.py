@@ -1,4 +1,4 @@
-# python3 3_dummy2.py -crt ../../testwebsite.crt https://192.168.56.101
+# python3 3_smarter.py -crt ../../testwebsite.crt https://192.168.56.101
 
 import argparse
 import asyncio
