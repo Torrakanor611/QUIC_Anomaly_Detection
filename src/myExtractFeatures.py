@@ -2,7 +2,7 @@ import argparse, os
 import scipy.stats as stats
 import numpy as np
 
-   
+
 def extractStats(data):
     pkt_len, time = np.hsplit(data, 2)
     times_m1seg = time[time < 1].flatten()
@@ -13,7 +13,7 @@ def extractStats(data):
     StdDev_pl = np.std(pkt_len)
     p=[95]
     perc_pl = np.array(np.percentile(pkt_len,p)).T.flatten()[0]
-    mod_pl = stats.mode(pkt_len)
+    #mod_pl = stats.mode(pkt_len)
     max_pl = np.max(pkt_len)
     min_pl = np.min(pkt_len)
 
@@ -35,10 +35,10 @@ def extractStats(data):
         StdDev_M1seg_t = np.std(times_M1seg)
         count_M1seg_t = len(times_M1seg)
 
-    features=np.hstack((mean_pl, median_pl, StdDev_pl, perc_pl, mod_pl, mean_m1seg_t, \
-        mean_M1seg_t, median_m1seg_t, median_M1seg_t, StdDev_m1seg_t, min_pl, max_pl, \
-        StdDev_M1seg_t, count_m1seg_t, count_M1seg_t))
-    
+    features=np.hstack((mean_pl, median_pl, StdDev_pl, perc_pl, mean_m1seg_t, \
+        mean_M1seg_t, median_m1seg_t, median_M1seg_t, StdDev_m1seg_t, min_pl, \
+        max_pl, StdDev_M1seg_t, count_m1seg_t, count_M1seg_t))
+
     return(features)
 
 def extractFeatures(dirname,basename,nObs,allwidths):
@@ -62,31 +62,31 @@ def main():
     parser.add_argument('-w', '--widths', nargs='*',required=True, help='list of observation windows widths')
     parser.add_argument('-o', '--output', nargs='?',required=False, help='output file')
     args=parser.parse_args()
-    
+
     dirname=args.input
     if isinstance(args.widths, list):
         allwidths=args.widths
     else:
         allwidths=list(args.widths)
-    
+
     allfiles=os.listdir(dirname)
     nObs=len([f for f in allfiles if '_w{}.'.format(allwidths[0]) in f])
     lbn=allfiles[0].rfind("obs")+3
     basename=allfiles[0][:lbn]
-    
+
     #print("nº observaçoes: ",nObs)
-    
+
     features=extractFeatures(dirname,basename,nObs,allwidths)
-    
+
     if args.output is None:
         outfilename=basename+"_features.dat"
     else:
         outfilename=args.output
-    
+
     np.savetxt(outfilename,features,fmt='%1.3e')
-    
+
     print(features.shape)
-        
+
 
 if __name__ == '__main__':
     main()
