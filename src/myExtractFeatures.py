@@ -4,59 +4,40 @@ import numpy as np
 
    
 def extractStats(data):
-    nSamp,nCols=data.shape
-    # print(data)
     pkt_len, time = np.hsplit(data, 2)
-    # print(pkt_len)
-    # print(time)
     times_m1seg = time[time < 1].flatten()
     times_M1seg = time[time >= 1].flatten()
-    print(times_M1seg)
-    print(times_m1seg)
-
     # (time independent) packet length features
     mean_pl = np.mean(pkt_len)
     median_pl = np.median(pkt_len)
-    StdDev_pl=np.std(pkt_len)
-    #Skew_pl=stats.skew(pkt_len)[0]
-    p=[75,90,95,98]
-    perc_pl=np.array(np.percentile(pkt_len,p)).T.flatten()[0]
-    
-    # print("mean_pl", mean_pl) 
-    # print("median_pl", median_pl)
-    # print("StdDev_pl", StdDev_pl)
-    # print("Skew_pl", Skew_pl)
-    # print("perc_pl", perc_pl)
+    StdDev_pl = np.std(pkt_len)
+    p=[95]
+    perc_pl = np.array(np.percentile(pkt_len,p)).T.flatten()[0]
+    mod_pl = stats.mode(pkt_len)
+    max_pl = np.max(pkt_len)
+    min_pl = np.min(pkt_len)
 
     mean_m1seg_t = median_m1seg_t = StdDev_m1seg_t = count_m1seg_t = 0
     mean_M1seg_t = median_M1seg_t = StdDev_M1seg_t = count_M1seg_t = 0
 
     # (time dependent) time for previous packet features
-    # < 1seg
+    # tim < 1seg
     if not times_m1seg.size == 0:
         mean_m1seg_t = np.mean(times_m1seg)
         median_m1seg_t = np.median(times_m1seg)
         StdDev_m1seg_t = np.std(times_m1seg)
         count_m1seg_t = len(times_m1seg)
 
-    # > 1seg
+    # time > 1seg
     if not times_M1seg.size == 0:
         mean_M1seg_t = np.mean(times_M1seg)
         median_M1seg_t = np.median(times_M1seg)
         StdDev_M1seg_t = np.std(times_M1seg)
         count_M1seg_t = len(times_M1seg)
 
-    # print("mean_m1seg_t", mean_m1seg_t)
-    # print("median_m1seg_t", median_m1seg_t)
-    # print("StdDev_m1seg_t", StdDev_m1seg_t)
-    # print("mean_M1seg_t", mean_M1seg_t)
-    # print("Median_M1seg_t", median_M1seg_t)
-    # print("StdDev_M1seg_t", StdDev_M1seg_t)
-
-    features=np.hstack((mean_pl, median_pl, StdDev_pl, perc_pl, mean_m1seg_t, \
-        mean_M1seg_t, median_m1seg_t, median_M1seg_t, StdDev_m1seg_t, StdDev_M1seg_t, \
-        count_m1seg_t, count_M1seg_t))
-    print(features)
+    features=np.hstack((mean_pl, median_pl, StdDev_pl, perc_pl, mod_pl, mean_m1seg_t, \
+        mean_M1seg_t, median_m1seg_t, median_M1seg_t, StdDev_m1seg_t, min_pl, max_pl, \
+        StdDev_M1seg_t, count_m1seg_t, count_M1seg_t))
     
     return(features)
 
@@ -68,10 +49,6 @@ def extractFeatures(dirname,basename,nObs,allwidths):
             subdata=np.loadtxt(obsfilename)[:,1:]    #Loads data and removes first column (sample index)
             faux=extractStats(subdata)
             features=np.hstack((features,faux))
-            
-            #faux2=extractStatsSilenceActivity(subdata)
-            #features=np.hstack((features,faux2))
-
         if o==0:
             obsFeatures=features
         else:
