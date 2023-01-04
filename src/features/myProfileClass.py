@@ -32,6 +32,7 @@ def plotFeatures(title,features,oClass,f1index=0,f2index=1):
     plt.ylabel("Median (2nd column)")
     plt.show()
     waitforEnter(False)
+
      
 def outputStatistics(method, tp, fp, tn, fn):
     ac = ((tp+tn)/(tp+tn+fp+fn))*100
@@ -43,25 +44,23 @@ def outputStatistics(method, tp, fp, tn, fn):
     else:
         sc = (2*(rec*pr))/(rec+pr)
 
-    print(" ----------- Output from "+method+" ----------- ")
-    print("True Positives: {}, False Positives: {}".format(tp, fp))
-    print("True Negatives: {}, False Negatives: {}".format(tn, fn))
-    print("Accuracy (%): " + str(ac))
-    print("Precision (%): ", str(pr))
-    print("Recall (%): ", str(rec))
-    print("F1-Score: ", str(sc))
-    print(" ---------------------------------------------- \n")
+    print("-- Analysis of "+method+" --")
+    print("True Positives: {:>4}, False Negatives: {:>4}".format(tp, fn))
+    print("True Negatives: {:>4}, False Positives: {:>4}".format(tn, fp))
+    print("")
+    print("{:<37}{:>6}".format("Accuracy (%): ", str(round(ac, 2))))
+    print("{:<37}{:>6}".format("Precision (%): ", str(round(pr, 2))))
+    print("{:<37}{:>6}".format("Recall (%): ", str(round(rec, 2))))
+    print("{:<37}{:>6}".format("F1-Score: ", str(round(sc, 2))))
+    print("-------------------------------------------\n")
+
 
 def myPCA(trainFeaturesN,testFeaturesN, trainClass):
-    pca = PCA(n_components=5, svd_solver='full')
+    pca = PCA(n_components=3, svd_solver='full')
 
     trainPCA=pca.fit(trainFeaturesN)
     trainFeaturesNPCA = trainPCA.transform(trainFeaturesN)
     testFeaturesNPCA = trainPCA.transform(testFeaturesN)
-
-    print(trainFeaturesNPCA.shape,trainClass.shape)
-    #plt.figure(nfig)
-    #plotFeatures("PCA",trainFeaturesNPCA,trainClass,0,1)
 
     return trainFeaturesNPCA,testFeaturesNPCA
 
@@ -75,8 +74,6 @@ def CentroidsDistance(trainClass, trainFeaturesN,testFeaturesN):
     pClass=(trainClass==0).flatten()
     centroids.update({0:np.mean(trainFeaturesN[pClass,:],axis=0)})
     print('All Features Centroids:\n',centroids)
-    #print("centroids", centroids)
-    #exit(1)
     pos = neg = 0
     AnomalyThreshold=1.4
     print('\n-- Anomaly Detection based on Centroids Distances --')
@@ -87,13 +84,13 @@ def CentroidsDistance(trainClass, trainFeaturesN,testFeaturesN):
         if dist >AnomalyThreshold:
             result="Anomaly"
             pos = pos + 1
-            # totA += 1
         else:
             result="OK"
             neg = neg + 1
 
         print('Obs: {:2} ({}): Normalized Distance to Centroids: {:.4f}   -> Result -> {}'.format(i,Classes[oClass[i][0]],dist,result))
     return (pos, neg)
+
 
 def CentroidsDistance_PCA(trainClass,trainFeaturesNPCA,testFeaturesNPCA):
     centroids={}
@@ -117,6 +114,7 @@ def CentroidsDistance_PCA(trainClass,trainFeaturesNPCA,testFeaturesNPCA):
         
         print('Obs: {:2} ({}): Normalized Distance to Centroids (PCA): {:.4f} -> Result -> {}'.format(i,Classes[oClass[i][0]],dist,result))
     return (pos, neg)
+
 
 def MultivariatePDF_PCA(trainClass, trainFeaturesNPCA,testFeaturesNPCA):
     print('\n-- Anomaly Detection based Multivariate PDF (PCA Features) --')
@@ -145,6 +143,7 @@ def MultivariatePDF_PCA(trainClass, trainFeaturesNPCA,testFeaturesNPCA):
         print('Obs: {:2} ({}): Probabilities: {:.4e} -> Result -> {}'.format(i,Classes[oClass[i][0]],prob,result))
     return (pos, neg)
 
+
 def OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA):
     print('\n-- Anomaly Detection based on One Class Support Vector Machines (PCA Features) --')
     ocsvm = svm.OneClassSVM(gamma='scale',kernel='linear').fit(trainFeaturesNPCA)  
@@ -168,6 +167,7 @@ def OneClassSVM_PCA(trainFeaturesNPCA, testFeaturesNPCA):
         polyneg = polyneg + 1 if L3[i] == 1 else polyneg
         print('Obs: {:2} ({:<8}): Kernel Linear->{:<10} | Kernel RBF->{:<10} | Kernel Poly->{:<10}'.format(i,Classes[oClass[i][0]],AnomResults[L1[i]],AnomResults[L2[i]],AnomResults[L3[i]]))
     return (linpos, linneg, RBFpos, RBFneg, polypos, polyneg)
+
 
 def OneClassSVM(trainFeaturesN, testFeaturesN):
     print('\n-- Anomaly Detection based on One Class Support Vector Machines --')
@@ -193,6 +193,7 @@ def OneClassSVM(trainFeaturesN, testFeaturesN):
         print('Obs: {:2} ({:<8}): Kernel Linear->{:<10} | Kernel RBF->{:<10} | Kernel Poly->{:<10}'.format(i,Classes[oClass[i][0]],AnomResults[L1[i]],AnomResults[L2[i]],AnomResults[L3[i]]))
     return (linpos, linneg, RBFpos, RBFneg, polypos, polyneg)
 
+
 def _percentage(arr):
     aux = [0, 0, 0, 0]
     aux[0] = round((float(arr[0]) / (arr[0] + arr[1]))*100)
@@ -201,16 +202,25 @@ def _percentage(arr):
     aux[3] = round((float(arr[3]) / (arr[2] + arr[3]))*100)
     return aux
 
+
 def main():
     plt.ion()
     ## FEATURE EXTRACTION
     ## -- Load features from browsing and attack -- ##
-    features_browsing=np.loadtxt("QUIC_45minspcap_np-29385_obs_features.dat")
+    #dirname = "ObsWind_10s_Slide_2s/"
+    dirname = "ObsWind_20s_Slide_5s/"
+    #dirname = "ObsWind_60s_Slide_10s/"
+
+    features_browsing = np.loadtxt(dirname+"QUIC_45minspcap_np-29385_obs_features.dat")
+    features_browsing1 = np.loadtxt(dirname+"QUIC_26minspcap_np-3604_obs_features.dat")
+    features_browsing2 = np.loadtxt(dirname+"QUIC_25mins_Manualpcap_np-17588_obs_features.dat")
+
+    features_browsing = np.vstack((features_browsing, features_browsing1, features_browsing2))
     oClass_browsing=np.ones((len(features_browsing),1))*0
 
-    features_dos = np.loadtxt("3_dummy-np-20000_obs_features.dat")
-    features_dos1 = np.loadtxt("3_dummy1-np-20000_obs_features.dat")
-    features_dos2 = np.loadtxt("3_smarter-np-20000_obs_features.dat")
+    features_dos = np.loadtxt(dirname+"3_dummy-np-20000_obs_features.dat")
+    features_dos1 = np.loadtxt(dirname+"3_dummy1-np-20000_obs_features.dat")
+    features_dos2 = np.loadtxt(dirname+"3_smarter-np-20000_obs_features.dat")
 
     features_dos = np.vstack((features_dos, features_dos1, features_dos2))
     oClass_dos=np.ones((len(features_dos),1))*0
@@ -222,8 +232,6 @@ def main():
 
     global nfig
     nfig = 1
-    #plt.figure(nfig)
-    #plotFeatures("Features",features,oClass,0,1)
     nfig += 1
 
     percentage=0.5
@@ -279,7 +287,7 @@ def main():
     testFeaturesN_DoS=trainScaler.transform(testFeatures_DoS)
     trainFeaturesNPCA_DoS,testFeaturesNPCA_DoS = myPCA(trainFeaturesN, testFeaturesN_DoS, trainClass)
 
-    #[tp, fp,tn,fn]
+    # [tp, fp,tn,fn]
     cd = [0, 0, 0 ,0]
     cdPCA = [0, 0, 0 ,0]
     MvPCA =[0, 0, 0 ,0]
@@ -313,51 +321,36 @@ def main():
 
     print(cd, cdPCA, MvPCA, _svmL, _svmRbf, _svmP, svmPCAL, svmPCARbf, svmPCAP)
 
-    ## TODO: check 
     # Anomaly Counter
-    print("----------- Total of Anomalies for each method -----------")
-    print("{:<31}{:>5}".format("Num. Observações test dataset: ", nObs))
-    print("{:<31}{:>5}".format("Num. entrys from browsing: ", nObs_b))
-    print("{:<31}{:>5}".format("Num. entrys from DoS: ", nObs_dos))
+    print("- Total of Anomalies for each method -")
+    print("{:<32}{:>6}".format("Num. Observações test dataset: ", nObs))
+    print("{:<32}{:>6}".format("Num. entrys from browsing: ", nObs_b))
+    print("{:<32}{:>6}".format("Num. entrys from DoS: ", nObs_dos))
     r = round((float(nObs_dos)/nObs)*100, 1)
-    print("{:<31}{:>5}".format("Percentage of DoS entrys: ", r))
-    print("{:<31}{:>5}".format("Expected anomalys: ", round(r/100*nObs, 1)))
+    print("{:<32}{:>6}".format("Percentage of DoS entrys: ", r))
+    print("{:<32}{:>6}".format("Expected anomalys: ", round(r/100*nObs, 1)))
     print("\n")
-    print("{:<31}{:>5}".format("Centroids Distance: ", str(AnomaliesCD)))
-    print("{:<31}{:>5}".format("Centroids Distance PCA: ", str(AnomaliesCD_PCA)))
-    print("{:<31}{:>5}".format("Multivariate PCA: ", str(AnomaliesMlt)))
-    print("{:<31}{:>5}".format("SVM Linear: ", str(AnomaliesL)))
-    print("{:<31}{:>5}".format("SVM Linear PCA: ", str(AnomaliesL_PCA)))
-    print("{:<31}{:>5}".format("SVM RBF: ", str(AnomaliesRBF)))
-    print("{:<31}{:>5}".format("SVM RBF PCA: ", str(AnomaliesRBF_PCA)))
-    print("{:<31}{:>5}".format("SVM Poly: ", str(AnomaliesP)))
-    print("{:<31}{:>5}".format("SVM Poly PCA: ", str(AnomaliesP_PCA)))
+    print("{:<32}{:>6}".format("Centroids Distance: ", str(AnomaliesCD)))
+    print("{:<32}{:>6}".format("Centroids Distance PCA: ", str(AnomaliesCD_PCA)))
+    print("{:<32}{:>6}".format("Multivariate PCA: ", str(AnomaliesMlt)))
+    print("{:<32}{:>6}".format("SVM Linear: ", str(AnomaliesL)))
+    print("{:<32}{:>6}".format("SVM Linear PCA: ", str(AnomaliesL_PCA)))
+    print("{:<32}{:>6}".format("SVM RBF: ", str(AnomaliesRBF)))
+    print("{:<32}{:>6}".format("SVM RBF PCA: ", str(AnomaliesRBF_PCA)))
+    print("{:<32}{:>6}".format("SVM Poly: ", str(AnomaliesP)))
+    print("{:<32}{:>6}".format("SVM Poly PCA: ", str(AnomaliesP_PCA)))
+    print("--------------------------------------\n")
 
-    print("----------------------------------------------------------\n")
-
-    ## TODO: check
     ## Output Accuracy and Precision Stats
-    outputStatistics("CentroidDistance",cd[0],cd[1],cd[2],cd[3])
-    outputStatistics("CentroidDistance PCA",cdPCA[0],cdPCA[1],cdPCA[2],cdPCA[3])
-    outputStatistics("MultivariatePDF PCA",MvPCA[0],MvPCA[1],MvPCA[2],MvPCA[3])
-    outputStatistics("SVM Linear",_svmL[0],_svmL[1],_svmL[2],_svmL[3])  
-    outputStatistics("SVM RBF",_svmRbf[0],_svmRbf[1],_svmRbf[2],_svmRbf[3])    
-    outputStatistics("SVM Poly",_svmP[0],_svmP[1],_svmP[2],_svmP[3])
-    outputStatistics("SVM Linear PCA",svmPCAL[0],svmPCAL[1],svmPCAL[2],svmPCAL[3])
-    outputStatistics("SVM RBF PCA",svmPCARbf[0],svmPCARbf[1],svmPCARbf[2],svmPCARbf[3])
-    outputStatistics("SVM Poly PCA",svmPCAP[0],svmPCAP[1],svmPCAP[2],svmPCAP[3])
-
-    nObs, nFea = trainFeaturesN.shape
-    print("trainFeaturesN nObs", nObs)
-    
-    # testFeaturesN_DoS       #TODO: Q É ISTO???
-    # nObs_DoS, nFea = testFeaturesN_DoS.shape
-    # print("testFeaturesN_DoS nObs", nObs_DoS)
-
-    # nObs, nFea = testFeaturesN_B.shape
-    # print("testFeaturesN_B nObs", nObs)
-
-    # print("trainFeaturesN nObs / testFeaturesN_DoS nObs", round(float(nObs_DoS / nObs)*100))
+    outputStatistics("Centroids Distances",cd[0],cd[1],cd[2],cd[3])
+    outputStatistics("Centroids Distances (PCA)",cdPCA[0],cdPCA[1],cdPCA[2],cdPCA[3])
+    outputStatistics("Multivariate PDF (PCA)",MvPCA[0],MvPCA[1],MvPCA[2],MvPCA[3])
+    outputStatistics("One Class SVM Linear",_svmL[0],_svmL[1],_svmL[2],_svmL[3])  
+    outputStatistics("One Class SVM RBF",_svmRbf[0],_svmRbf[1],_svmRbf[2],_svmRbf[3])    
+    outputStatistics("One Class SVM Poly",_svmP[0],_svmP[1],_svmP[2],_svmP[3])
+    outputStatistics("One Class SVM Linear (PCA)",svmPCAL[0],svmPCAL[1],svmPCAL[2],svmPCAL[3])
+    outputStatistics("One Class SVM RBF (PCA)",svmPCARbf[0],svmPCARbf[1],svmPCARbf[2],svmPCARbf[3])
+    outputStatistics("One Class SVM poly (PCA)",svmPCAP[0],svmPCAP[1],svmPCAP[2],svmPCAP[3])
 
     metrics = ['True pos.', 'False neg.', 'False pos.', 'True neg.']
     bar_colors = ['tab:green', 'tab:red', 'tab:blue', 'tab:blue']

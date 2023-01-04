@@ -11,15 +11,10 @@ def pktHandler(timestamp,dstIP,lengthIP,outfile, np, verbose):
         outc[0]=int(lengthIP)
         outc[1]=float(timestamp) - lastTimestamp
         lastTimestamp = float(timestamp)
-        # if outc[1] > 1:
-        #     print("outc[1]", outc[1])
             
         outfile.write('{} {} {}\n'.format(np,*outc))
         if verbose == str(1):
             print('{} {} {}'.format(np,*outc))
-
-        # o que tem mais o tamanho do pacote cli -> serv
-        # numero de bytes outc[0] ; tempo para o pacote anterior outc[1]
         
 def main():
     parser=argparse.ArgumentParser()
@@ -59,7 +54,6 @@ def main():
 
     npkts=0
     outc=[0,0,0,0]
-    #print('Sampling interval: {} second'.format(sampDelta))
 
     outfile = open(fileOutput,'w')
     capture = []

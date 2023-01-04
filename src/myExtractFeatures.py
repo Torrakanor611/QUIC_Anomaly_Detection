@@ -74,8 +74,6 @@ def main():
     lbn=allfiles[0].rfind("obs")+3
     basename=allfiles[0][:lbn]
 
-    #print("nº observaçoes: ",nObs)
-
     features=extractFeatures(dirname,basename,nObs,allwidths)
 
     if args.output is None:
